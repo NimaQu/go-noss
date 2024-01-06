@@ -31,6 +31,7 @@ var hash atomic.Value
 var messageId atomic.Value
 var currentWorkers int32
 var arbRpcUrl string
+var eventUrl string
 
 var (
 	ErrDifficultyTooLow = errors.New("nip13: insufficient difficulty")
@@ -45,6 +46,7 @@ func init() {
 	}
 	sk = os.Getenv("sk")
 	pk = os.Getenv("pk")
+	eventUrl = os.Getenv("eventUrl")
 	numberOfWorkers, _ = strconv.Atoi(os.Getenv("numberOfWorkers"))
 	arbRpcUrl = os.Getenv("arbRpcUrl")
 }
@@ -170,7 +172,7 @@ func mine(ctx context.Context, messageId string, client *ethclient.Client) {
 			log.Fatalf("Error marshaling wrapper: %v", err)
 		}
 
-		url := "https://api-worker.noscription.org/inscribe/postEvent"
+		url := eventUrl
 		// fmt.Print(bytes.NewBuffer(wrapperJSON))
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(wrapperJSON)) // 修改了弱智项目方不识别美化Json的bug
 		if err != nil {
@@ -198,7 +200,7 @@ func mine(ctx context.Context, messageId string, client *ethclient.Client) {
 		fmt.Println("Response Status:", resp.Status)
 		spendTime := time.Since(startTime)
 		// fmt.Println("Response Body:", string(body))
-		fmt.Println(nostr.Now().Time(), "spend: ", spendTime, "!!!!!!!!!!!!!!!!!!!!!published to:", evNew.ID)
+		fmt.Println(nostr.Now().Time(), "spend: ", spendTime, "     published to:", evNew.ID)
 		atomic.StoreInt32(&nonceFound, 0)
 	case <-ctx.Done():
 		fmt.Print("done")
